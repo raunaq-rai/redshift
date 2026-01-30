@@ -232,7 +232,7 @@ class RedshiftSlider:
         # Buttons - compact layout
         btn_y = 0.015
         btn_h = 0.025
-        btn_w = 0.07
+        btn_w = 0.08
         
         # Reset button
         ax_reset = plt.axes([0.55, btn_y, btn_w, btn_h])
@@ -240,30 +240,24 @@ class RedshiftSlider:
         self.reset_button.on_clicked(self._reset)
         
         # Wider range button
-        ax_wider = plt.axes([0.63, btn_y, btn_w, btn_h])
+        ax_wider = plt.axes([0.64, btn_y, btn_w, btn_h])
         self.wider_button = Button(ax_wider, 'Wider', color='lightgray')
         self.wider_button.on_clicked(self._widen_range)
         
-        # Save button (green)
-        ax_save = plt.axes([0.71, btn_y, btn_w, btn_h])
-        self.save_button = Button(ax_save, 'Save', color='#2ecc71', hovercolor='#27ae60')
-        self.save_button.on_clicked(self._save_redshift)
+        # Next/Done button (auto-saves) - green to indicate it saves
+        ax_next = plt.axes([0.73, btn_y, btn_w + 0.02, btn_h])
+        next_label = 'Next ✓' if self.batch_info else 'Done ✓'
+        self.next_button = Button(ax_next, next_label, color='#2ecc71', hovercolor='#27ae60')
+        self.next_button.on_clicked(self._next_and_save)
         
-        # Next/Done button (for batch mode shows "Next", otherwise "Done")
-        ax_next = plt.axes([0.79, btn_y, btn_w, btn_h])
-        next_label = 'Next' if self.batch_info else 'Done'
-        self.next_button = Button(ax_next, next_label, color='#3498db', hovercolor='#2980b9')
-        self.next_button.on_clicked(self._next)
-        
-        # Skip button (orange) - only in batch mode
+        # Skip button (orange) - skips without saving
+        self.skipped = False
         if self.batch_info:
-            ax_skip = plt.axes([0.87, btn_y, btn_w, btn_h])
+            ax_skip = plt.axes([0.84, btn_y, btn_w, btn_h])
             self.skip_button = Button(ax_skip, 'Skip', color='#e67e22', hovercolor='#d35400')
             self.skip_button.on_clicked(self._skip)
-            self.skipped = False
         else:
             self.skip_button = None
-            self.skipped = False
     
     def _plot_main_spectrum(self):
         """Plot the main spectrum view."""
@@ -475,7 +469,7 @@ class RedshiftSlider:
         self.slider.label.set_text(f'z (±{self.delta_z:.3f})')
         self.fig.canvas.draw_idle()
     
-    def _save_redshift(self, event):
+    def _save_redshift(self):
         """Save the current redshift to file."""
         # Create header if file doesn't exist
         if not self.save_file.exists():
@@ -493,26 +487,11 @@ class RedshiftSlider:
             f.write(f"{self.msaid:<16} {self.z_prior:<13.5f} {self.z:<13.5f} {delta_z:+.5f}\n")
         
         self.saved = True
-        
-        # Visual feedback - flash the save button
-        self.save_button.color = '#27ae60'
-        self.save_button.label.set_text('Saved!')
-        self.fig.canvas.draw_idle()
-        
-        # Reset button after a moment
-        self.fig.canvas.flush_events()
-        import time
-        time.sleep(0.3)
-        self.save_button.color = '#2ecc71'
-        self.save_button.label.set_text('Save')
-        self.fig.canvas.draw_idle()
-        
         print(f"Saved: MSAID={self.msaid}, z={self.z:.5f} -> {self.save_file}")
     
-    def _next(self, event):
-        """Close and move to next (in batch mode) or just close."""
-        if not self.saved and self.z != self.z_prior:
-            print(f"Warning: Redshift changed but not saved! z={self.z:.5f}")
+    def _next_and_save(self, event):
+        """Auto-save and close/move to next."""
+        self._save_redshift()
         plt.close(self.fig)
     
     def _skip(self, event):
@@ -697,8 +676,7 @@ def main():
     print(f"True redshifts: {z_trues}")
     print("Starting with slightly offset z_priors")
     print("\nButtons:")
-    print("  - Save: Save current z to file")
-    print("  - Next: Move to next object")
+    print("  - Next ✓: Save and move to next object")
     print("  - Skip: Skip without saving")
     print("=" * 60)
     
