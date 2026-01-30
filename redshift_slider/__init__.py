@@ -14,8 +14,8 @@ Basic usage:
 For more options, see RedshiftSlider docstring.
 """
 
-from .core import RedshiftSlider, STRONG_LINES, ZOOM_LINES, LINE_COLORS
+from .core import RedshiftSlider, batch_fit, STRONG_LINES, ZOOM_LINES, LINE_COLORS
 
 __version__ = "0.1.0"
 __author__ = "Raunaq Rai"
-__all__ = ["RedshiftSlider", "STRONG_LINES", "ZOOM_LINES", "LINE_COLORS"]
+__all__ = ["RedshiftSlider", "batch_fit", "STRONG_LINES", "ZOOM_LINES", "LINE_COLORS"]
