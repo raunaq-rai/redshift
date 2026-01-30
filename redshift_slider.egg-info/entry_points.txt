@@ -1,0 +1,2 @@
+[console_scripts]
+redshift-slider-demo = redshift_slider.core:main

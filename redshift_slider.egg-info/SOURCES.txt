@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+redshift_slider/__init__.py
+redshift_slider/core.py
+redshift_slider.egg-info/PKG-INFO
+redshift_slider.egg-info/SOURCES.txt
+redshift_slider.egg-info/dependency_links.txt
+redshift_slider.egg-info/entry_points.txt
+redshift_slider.egg-info/requires.txt
+redshift_slider.egg-info/top_level.txt
