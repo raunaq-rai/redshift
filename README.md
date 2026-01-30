@@ -2,6 +2,10 @@
 
 Interactive redshift fitting tool with visual emission line markers.
 
+## Demo
+
+![redshift_slider demo](demo.gif)
+
 ## Installation
 
 ```bash
@@ -31,22 +35,49 @@ slider = RedshiftSlider(
 z_fitted = slider.show()
 ```
 
+## Batch Processing
+
+Process multiple spectra in one go:
+
+```python
+from redshift_slider import batch_fit
+
+results = batch_fit(
+    wavelengths=[wl1, wl2, wl3],
+    fluxes=[fl1, fl2, fl3],
+    z_priors=[2.5, 3.1, 1.8],
+    msaids=['obj1', 'obj2', 'obj3'],
+    save_file='fitted_redshifts.txt'
+)
+```
+
 ## Features
 
 - **Interactive slider** to adjust redshift and see where emission lines would fall
-- **Zoom panels** around key emission lines for detailed inspection
-- **Save button** to record fitted redshifts to a file with MSAID
+- **Zoom panels** around key emission lines (Lyα, CIV, CIII], Hβ, [OIII], Hα)
+- **Auto-save** - redshifts saved automatically when pressing Next ✓ or Enter
+- **Keyboard navigation** for precise adjustments
 - **Color-coded lines** by type (UV, Balmer, [OIII], etc.)
-- Fine-tuning with **narrow z range** (±0.05 default) and 0.0001 step size
+- **Step-style spectra** in zoom panels to show spectral bins clearly
 
-## Buttons
+## Controls
+
+### Buttons
 
 | Button | Function |
 |--------|----------|
 | Reset | Return to z_prior |
-| Wider ± | Double the slider range |
-| Save z | Save current redshift to file |
-| Done | Close the window |
+| Wider | Double the slider range |
+| Next ✓ | Auto-save and move to next spectrum |
+| Skip | Skip without saving (batch mode only) |
+
+### Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| ← / → | Adjust z by ±0.0005 |
+| Shift + ← / → | Fine adjust z by ±0.0001 |
+| Enter | Save and move to next spectrum |
 
 ## Output File Format
 
@@ -67,7 +98,7 @@ demo_12345       1.98000       2.00123       +0.02123
 | `delta_z` | 0.05 | Slider range: z_prior ± delta_z |
 | `msaid` | 'unknown' | Object identifier |
 | `save_file` | 'fitted_redshifts.txt' | Output file path |
-| `zoom_width_A` | 200 | Zoom panel width (rest-frame Å) |
+| `zoom_width_A` | 80 | Zoom panel width (rest-frame Å) |
 
 ## Custom Lines
 
@@ -81,9 +112,8 @@ my_lines = {
 slider = RedshiftSlider(wavelength, flux, z_prior=2.0, lines=my_lines)
 ```
 
-## Demo
+## Run Demo
 
-Run the built-in demo:
 ```bash
 redshift-slider-demo
 ```

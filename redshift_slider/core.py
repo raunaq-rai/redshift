@@ -55,7 +55,7 @@ STRONG_LINES = {
 }
 
 # Key lines to show in zoom panels (most important for redshift fitting)
-ZOOM_LINES = ['Lyα', 'CIV', 'CIII]', 'MgII', '[OII]', 'Hβ', '[OIII]5007', 'Hα']
+ZOOM_LINES = ['Lyα', 'CIV', 'CIII]', 'Hβ', '[OIII]5007', 'Hα']
 
 # Colors for different line types
 LINE_COLORS = {
@@ -104,7 +104,7 @@ class RedshiftSlider:
     zoom_lines : list, optional
         Which lines to show in zoom panels. Default: ZOOM_LINES
     zoom_width_A : float
-        Width of zoom window in rest-frame Angstroms (default: 200)
+        Width of zoom window in rest-frame Angstroms (default: 80, tighter zoom)
     figsize : tuple, optional
         Figure size (width, height). Default: (11, 5) for compact view
     batch_info : str, optional
@@ -120,7 +120,7 @@ class RedshiftSlider:
     
     def __init__(self, wavelength, flux, flux_err=None, z_prior=0.0,
                  delta_z=0.05, msaid=None, save_file='fitted_redshifts.txt',
-                 lines=None, zoom_lines=None, zoom_width_A=200,
+                 lines=None, zoom_lines=None, zoom_width_A=80,
                  figsize=None, batch_info=None):
         
         self.wavelength = np.asarray(wavelength)
@@ -258,6 +258,9 @@ class RedshiftSlider:
             self.skip_button.on_clicked(self._skip)
         else:
             self.skip_button = None
+        
+        # Connect keyboard events for arrow key navigation
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
     
     def _plot_main_spectrum(self):
         """Plot the main spectrum view."""
@@ -339,7 +342,7 @@ class RedshiftSlider:
             rest_wl = self.lines[line_name]
             obs_wl = rest_wl * (1 + self.z)
             
-            # Zoom window in observed frame
+            # Zoom window in observed frame - tighter zoom
             zoom_half_width = self.zoom_width_A * (1 + self.z) / 2
             wl_lo = obs_wl - zoom_half_width
             wl_hi = obs_wl + zoom_half_width
@@ -351,25 +354,27 @@ class RedshiftSlider:
                 wl_zoom = self.wavelength[mask]
                 fl_zoom = self.flux[mask]
                 
-                # Plot spectrum in zoom
+                # Plot spectrum as steps (histogram style)
                 if self.flux_err is not None:
                     err_zoom = self.flux_err[mask]
+                    # Step-style error region
                     ax.fill_between(wl_zoom, fl_zoom - err_zoom, fl_zoom + err_zoom,
-                                   alpha=0.3, color='gray')
-                ax.plot(wl_zoom, fl_zoom, 'k-', lw=0.8)
+                                   alpha=0.3, color='gray', step='mid')
+                ax.step(wl_zoom, fl_zoom, where='mid', color='k', lw=0.8)
                 
-                # Auto y-limits based on data
+                # Auto y-limits based on data - use full range to capture peaks
                 valid = np.isfinite(fl_zoom)
                 if valid.any():
-                    ymin, ymax = np.percentile(fl_zoom[valid], [2, 98])
-                    padding = (ymax - ymin) * 0.2
+                    ymin = np.nanmin(fl_zoom[valid])
+                    ymax = np.nanmax(fl_zoom[valid])
+                    padding = (ymax - ymin) * 0.15
                     ax.set_ylim(ymin - padding, ymax + padding)
             
             ax.set_xlim(wl_lo, wl_hi)
             
-            # Draw the emission line
+            # Draw the emission line - thinner
             color = LINE_COLORS.get(line_name, '#7f8c8d')
-            zoom_line = ax.axvline(obs_wl, color=color, linestyle='-', lw=2, alpha=0.8)
+            zoom_line = ax.axvline(obs_wl, color=color, linestyle='-', lw=1, alpha=0.9)
             self.zoom_line_artists[line_name] = zoom_line
             
             # Title with line name
@@ -433,14 +438,15 @@ class RedshiftSlider:
             if zoom_line:
                 zoom_line.set_xdata([obs_wl, obs_wl])
             
-            # Update y-limits based on new window
+            # Update y-limits based on new window - use full range to capture peaks
             mask = (self.wavelength >= wl_lo) & (self.wavelength <= wl_hi)
             if mask.any():
                 fl_zoom = self.flux[mask]
                 valid = np.isfinite(fl_zoom)
                 if valid.any():
-                    ymin, ymax = np.percentile(fl_zoom[valid], [2, 98])
-                    padding = (ymax - ymin) * 0.2
+                    ymin = np.nanmin(fl_zoom[valid])
+                    ymax = np.nanmax(fl_zoom[valid])
+                    padding = (ymax - ymin) * 0.15
                     ax.set_ylim(ymin - padding, ymax + padding)
         
         # Update title
@@ -451,6 +457,29 @@ class RedshiftSlider:
         title_parts.append(f'z = {self.z:.5f}')
         self.title.set_text('  |  '.join(title_parts))
         self.fig.canvas.draw_idle()
+    
+    def _on_key_press(self, event):
+        """Handle keyboard events for arrow key navigation."""
+        if event.key == 'left':
+            # Decrease z - regular step
+            new_z = max(self.z_min, self.z - 0.0005)
+            self.slider.set_val(new_z)
+        elif event.key == 'right':
+            # Increase z - regular step
+            new_z = min(self.z_max, self.z + 0.0005)
+            self.slider.set_val(new_z)
+        elif event.key == 'shift+left':
+            # Decrease z - fine step
+            new_z = max(self.z_min, self.z - 0.0001)
+            self.slider.set_val(new_z)
+        elif event.key == 'shift+right':
+            # Increase z - fine step
+            new_z = min(self.z_max, self.z + 0.0001)
+            self.slider.set_val(new_z)
+        elif event.key == 'enter':
+            # Save and move to next
+            self._save_redshift()
+            plt.close(self.fig)
     
     def _reset(self, event):
         """Reset slider to initial z_prior."""
@@ -688,7 +717,7 @@ def main():
         msaids=msaids,
         save_file='demo_redshifts.txt',
         delta_z=0.05,
-        zoom_width_A=150
+        zoom_width_A=80
     )
     
     print("\nResults:")

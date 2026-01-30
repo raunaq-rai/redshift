@@ -1,0 +1,27 @@
+# Generated files
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Video files (too large for git)
+*.mov
+*.mp4
+example.mov
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+
+# Python
+*.egg
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
