@@ -42,19 +42,20 @@ STRONG_LINES = {
     'CIV_2': 1550.772,
     'HeII': 1640.420,
     'CIII]': 1908.734,
-    'MgII_1': 2795.528,
-    'MgII_2': 2802.705,
-    '[OII]': 3727.09,
-    'Hγ': 4340.471,
-    'Hβ': 4861.333,
-    '[OIII]4959': 4958.911,
-    '[OIII]5007': 5006.843,
-    'Hα': 6562.819,
-    '[NII]6549': 6548.050,
-    '[NII]6584': 6583.460,
-    '[SII]6717': 6716.440,
-    '[SII]6731': 6730.810,
+    'MgII_1': 2796.3521746,
+    'MgII_2': 2803.53092724,
+    '[OII]': 3728.1499742,
+    'Hγ': 4341.6912926,
+    'Hβ': 4862.69097682,
+    '[OIII]4959': 4960.29488287 ,
+    '[OIII]5007': 5008.23961936,
+    'Hα': 6564.63188571,
+    '[NII]6549': 6549.85891576,
+    '[NII]6584': 6585.27843452,
+    '[SII]6717': 6718.294195,
+    '[SII]6731': 6732.66806055,
 }
+
 
 # Key lines to show in zoom panels (most important for redshift fitting)
 ZOOM_LINES = ['Lyα', 'CIV', 'CIII]', 'Hβ', '[OIII]5007', 'Hα']
@@ -62,11 +63,12 @@ ZOOM_LINES = ['Lyα', 'CIV', 'CIII]', 'Hβ', '[OIII]5007', 'Hα']
 # Colors for different line types
 LINE_COLORS = {
     'Lyα': '#e74c3c',      # red
-    'NV': '#e74c3c',
-    'CIV': '#3498db',      # blue
+    'CIV_1': '#3498db',      # blue
+    'CIV_2': '#3498db',
     'HeII': '#3498db',
     'CIII]': '#3498db',
-    'MgII': '#9b59b6',     # purple
+    'MgII_1': '#9b59b6',     # purple
+    'MgII_2': '#9b59b6',
     '[OII]': '#2ecc71',    # green
     'Hγ': '#f39c12',       # orange (Balmer)
     'Hβ': '#f39c12',
