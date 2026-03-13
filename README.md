@@ -1,5 +1,7 @@
 # redshift_slider
 
+lottie example...
+
 Interactive redshift fitting tool with visual emission line markers.
 
 ## Demo
