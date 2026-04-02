@@ -164,16 +164,24 @@ class RedshiftSlider:
         self._setup_figure()
     
     def _filter_zoom_lines(self):
-        """Keep only zoom lines that fall within the wavelength range."""
+        """Keep only zoom lines that could fall within the wavelength range.
+
+        Uses a generous z margin so panels remain available even after
+        pressing 'Wider' several times.
+        """
         wl_min, wl_max = self.wavelength.min(), self.wavelength.max()
-        
+
+        # Use a wide margin so zoom panels survive multiple widenings
+        generous_delta = self.delta_z * 8
+        z_lo = max(0.0, self.z_prior - generous_delta)
+        z_hi = self.z_prior + generous_delta
+
         self.active_zoom_lines = []
         for name in self.zoom_line_names:
             if name in self.lines:
                 rest_wl = self.lines[name]
-                # Check if line is visible anywhere in the z range
-                obs_wl_min = rest_wl * (1 + self.z_min)
-                obs_wl_max = rest_wl * (1 + self.z_max)
+                obs_wl_min = rest_wl * (1 + z_lo)
+                obs_wl_max = rest_wl * (1 + z_hi)
                 if obs_wl_max >= wl_min and obs_wl_min <= wl_max:
                     self.active_zoom_lines.append(name)
         
@@ -345,35 +353,31 @@ class RedshiftSlider:
         for line_name, ax in self.zoom_axes.items():
             rest_wl = self.lines[line_name]
             obs_wl = rest_wl * (1 + self.z)
-            
+
             # Zoom window in observed frame - tighter zoom
             zoom_half_width = self.zoom_width_A * (1 + self.z) / 2
             wl_lo = obs_wl - zoom_half_width
             wl_hi = obs_wl + zoom_half_width
-            
-            # Get data in this range
+
+            # Plot full spectrum so data is always available when xlim changes
+            if self.flux_err is not None:
+                ax.fill_between(self.wavelength,
+                                self.flux - self.flux_err,
+                                self.flux + self.flux_err,
+                                alpha=0.3, color='gray', step='mid')
+            ax.step(self.wavelength, self.flux, where='mid', color='k', lw=0.8)
+
+            # Auto y-limits based on visible data
             mask = (self.wavelength >= wl_lo) & (self.wavelength <= wl_hi)
-            
             if mask.any():
-                wl_zoom = self.wavelength[mask]
                 fl_zoom = self.flux[mask]
-                
-                # Plot spectrum as steps (histogram style)
-                if self.flux_err is not None:
-                    err_zoom = self.flux_err[mask]
-                    # Step-style error region
-                    ax.fill_between(wl_zoom, fl_zoom - err_zoom, fl_zoom + err_zoom,
-                                   alpha=0.3, color='gray', step='mid')
-                ax.step(wl_zoom, fl_zoom, where='mid', color='k', lw=0.8)
-                
-                # Auto y-limits based on data - use full range to capture peaks
                 valid = np.isfinite(fl_zoom)
                 if valid.any():
                     ymin = np.nanmin(fl_zoom[valid])
                     ymax = np.nanmax(fl_zoom[valid])
                     padding = (ymax - ymin) * 0.15
                     ax.set_ylim(ymin - padding, ymax + padding)
-            
+
             ax.set_xlim(wl_lo, wl_hi)
             
             # Draw the emission line - thinner
